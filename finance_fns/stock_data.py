@@ -99,9 +99,16 @@ def add_to_df(df: frame.DataFrame) -> Callable[[str, Callable], frame.DataFrame]
     return adder
 
 
-def get_filtered_df(df: frame.DataFrame) -> Callable[[Callable[[frame.DataFrame], bool]], frame.DataFrame]:
+def get_filtered_df(df: frame.DataFrame) -> Callable[[Callable[[frame.DataFrame], pd.DataFrame]], frame.DataFrame]:
     new_df = df.copy()
-    return lambda fn: new_df[fn(new_df)]
+
+    def filter_fn(fn: Callable[[frame.DataFrame], pd.DataFrame]) -> frame.DataFrame:
+        boolean_series = fn(new_df)
+        if not isinstance(boolean_series, pd.Series):
+            raise ValueError("Filter function must return a Pandas Series of boolean values.")
+        return new_df[boolean_series]
+
+    return filter_fn
 
 
 if __name__ == "__main__":
